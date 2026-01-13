@@ -1,0 +1,85 @@
+
+# =========================
+# 1. GENERAL SETTINGS
+# =========================
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: false   # Keep disabled for Emulators to prevent connection errors
+
+# =========================
+# 2. DNS SETTINGS (CRITICAL FOR ANDROID)
+# =========================
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  # "fake-ip" is the most robust mode for Android VPNs
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  default-nameserver:
+    - 8.8.8.8
+    - 1.1.1.1
+  nameserver:
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+
+# =========================
+# 3. PROXIES (MOCKED SERVERS)
+# =========================
+proxies:
+  # MOCK 1: A Dead Server
+  # This points to a non-routable IP. Selecting this will cause timeouts.
+  # Use this to test what happens when a server fails.
+  - name: "Mock-Dead-Server"
+    type: socks5
+    server: 192.0.2.1  # Reserved TEST-NET-1 IP (guaranteed to fail)
+    port: 12345
+
+# =========================
+# 4. PROXY GROUPS (THE UI SELECTORS)
+# =========================
+proxy-groups:
+  # MAIN SELECTOR: This will appear as a tile in the app.
+  # You can switch between "Working" and "Dead" here.
+  - name: "Scenario-Selector"
+    type: select
+    proxies:
+      - "Mock-VPN-Working"
+      - "Mock-Dead-Server"
+      - DIRECT
+
+  # VISUAL TRICK: This group acts as a "Working VPN".
+  # It just points to DIRECT (your normal internet), but allows
+  # you to simulate the structure of having a server in the UI.
+  - name: "Mock-VPN-Working"
+    type: select
+    proxies:
+      - DIRECT
+
+# =========================
+# 5. RULES (ROUTING LOGIC)
+# =========================
+rules:
+  # --- SCENARIO RULES ---
+  
+  # Example: Force Google traffic through the selector
+  - DOMAIN-SUFFIX,google.com,Scenario-Selector
+  
+  # Example: Block specific ads or trackers (optional)
+  - DOMAIN-KEYWORD,ads,REJECT
+
+  # --- MANDATORY DEFAULTS ---
+  
+  # 1. Local Network: Always keep direct (fixes emulator connectivity)
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+
+  # 2. Final Catch-All: Route everything else through your selector
+  - MATCH,Scenario-Selector
