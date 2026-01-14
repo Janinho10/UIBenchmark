@@ -1,0 +1,13 @@
+# Office Temporary Files
+~$*
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+*.ipynb
+
+# Local Database & Large PDFs (Optional - keep if needed for submission)
+*.db
+# *.pdf
+
+# Mac System Files
+.DS_Store
