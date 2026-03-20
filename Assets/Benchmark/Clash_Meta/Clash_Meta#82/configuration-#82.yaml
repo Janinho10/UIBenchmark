@@ -1,0 +1,26 @@
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+
+proxies:
+  - name: "Dummy Proxy"
+    type: socks5
+    server: 127.0.0.1
+    port: 1080
+
+proxy-groups:
+  - name: "Proxy"
+    type: select
+    proxies:
+      - "Dummy Proxy"
+
+proxy-providers:
+  test-provider:
+    type: http
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.yaml
+    path: ./providers/test-provider.yaml
+    interval: 3600
+
+rules:
+  - MATCH,Proxy

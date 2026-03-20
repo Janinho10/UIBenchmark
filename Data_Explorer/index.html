@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Interactive explorer for the benchmark recordings, assets, and database metadata."
+    />
+    <title>Benchmark Data Explorer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-glow"></div>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Benchmark Dataset</p>
+        <h1>Benchmark Data Explorer</h1>
+        <p class="hero-copy">
+          Structured access to recordings, metadata, gestures, system actions, and
+          benchmark asset files in a static interface suitable for documentation and analysis.
+        </p>
+        <div class="hero-links">
+          <a class="file-link primary" href="../Assets/database_working_copy.db" target="_blank" rel="noreferrer">
+            Download Working Database
+          </a>
+          <a class="file-link" href="./data/explorer-data.json" target="_blank" rel="noreferrer">
+            Open Explorer JSON
+          </a>
+        </div>
+        <div class="hero-stats" id="summary-cards"></div>
+        <div class="panel browse-panel">
+            <div class="panel-heading">
+            <h2>Dataset Navigation</h2>
+            <p>Select an application or recording and refine the visible subset using the filters below.</p>
+            </div>
+
+          <div class="filter-grid unified-filters">
+            <label class="field field-search">
+              <span>Search</span>
+              <input
+                id="search-input"
+                type="search"
+                placeholder="App, recording, category, language"
+                autocomplete="off"
+              />
+            </label>
+
+            <label class="field">
+              <span>App</span>
+              <select id="app-filter"></select>
+            </label>
+
+            <label class="field">
+              <span>Recording</span>
+              <select id="recording-filter"></select>
+            </label>
+
+            <label class="field">
+              <span>Category</span>
+              <select id="category-filter"></select>
+            </label>
+
+            <label class="field">
+              <span>Source</span>
+              <select id="source-filter"></select>
+            </label>
+
+            <label class="field">
+              <span>Class</span>
+              <select id="class-filter"></select>
+            </label>
+          </div>
+
+          <div class="result-meta browse-meta">
+            <strong id="result-count">0 recordings</strong>
+            <span id="result-hint">Choose a recording to inspect it.</span>
+            <button id="reset-filters" class="ghost-button" type="button">
+              Reset filters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <section class="detail-stage">
+          <div id="empty-state" class="empty-state" hidden>
+            <h2>No recordings match these filters.</h2>
+            <p>Try removing a filter or searching for a different app.</p>
+          </div>
+
+          <article id="detail-view" class="detail-view" hidden>
+            <header class="detail-header">
+              <div>
+                <p class="eyebrow" id="detail-app"></p>
+                <h2 id="detail-recording"></h2>
+                <p class="detail-copy" id="detail-subtitle"></p>
+              </div>
+              <div class="detail-badges" id="detail-badges"></div>
+            </header>
+
+            <section class="media-grid">
+              <div class="panel video-panel">
+                <div class="panel-heading compact">
+                  <h3>Recording</h3>
+                  <p id="detail-video-caption"></p>
+                </div>
+                <video id="recording-video" controls preload="metadata"></video>
+                <div class="file-actions" id="primary-file-links"></div>
+              </div>
+
+              <div class="panel stats-panel">
+                <div class="panel-heading compact">
+                  <h3>Metadata</h3>
+                  <p>Core values from the SQLite database and benchmark files.</p>
+                </div>
+                <dl class="meta-grid" id="metadata-grid"></dl>
+              </div>
+            </section>
+
+            <section class="split-grid">
+              <div class="panel">
+                <div class="panel-heading compact">
+                  <h3>Timeline</h3>
+                  <p>Combined gesture, system action, and artifact event stream.</p>
+                </div>
+                <div class="timeline-toggles" id="timeline-toggles"></div>
+                <div class="timeline-list" id="timeline-list"></div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-heading compact">
+                  <h3>Files</h3>
+                  <p>Direct links into the benchmark asset tree.</p>
+                </div>
+                <div id="file-groups" class="file-groups"></div>
+              </div>
+            </section>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>

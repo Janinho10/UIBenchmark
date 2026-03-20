@@ -1,0 +1,5 @@
+*
+!.gitignore
+!Benchmark/
+!Benchmark/**
+!database_working_copy.db
