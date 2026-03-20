@@ -3,3 +3,7 @@
 !Benchmark/
 !Benchmark/**
 !database_working_copy.db
+*.DS_Store
+Benchmark/**/.DS_Store
+Benchmark/**/__pycache__/
+Benchmark/**/*.pyc

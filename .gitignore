@@ -2,3 +2,6 @@ Assets/*
 !Assets/Benchmark/
 !Assets/Benchmark/**
 !Assets/database_working_copy.db
+*.DS_Store
+__pycache__/
+*.pyc
