@@ -10,6 +10,8 @@ const state = {
   },
   filtered: [],
   selectedId: null,
+  pendingSeekSeconds: null,
+  pendingAutoplayAfterSeek: false,
 };
 
 const elements = {
@@ -305,8 +307,13 @@ function renderDetailBadges(recording) {
 }
 
 function renderVideo(recording) {
-  elements.recordingVideo.src = recording.files.video?.path ?? "";
+  state.pendingSeekSeconds = null;
+  state.pendingAutoplayAfterSeek = false;
+  const baseSrc = recording.files.video?.path ?? "";
+  elements.recordingVideo.dataset.baseSrc = baseSrc;
+  elements.recordingVideo.src = baseSrc;
   elements.recordingVideo.poster = "";
+  elements.recordingVideo.load();
 }
 
 function renderPrimaryFileLinks(recording) {
@@ -379,18 +386,37 @@ function renderTimeline(recording) {
 
   elements.timelineList.innerHTML = visibleEvents
     .map(
-      (event) => `
-        <article class="timeline-item">
+      (event) => {
+        const isJumpable = Number.isFinite(event.seek_seconds);
+        const tagName = isJumpable ? "button" : "article";
+        const actionIdentity = event.action_identity
+          ? `<div class="timeline-identity">Action identity: ${escapeHtml(event.action_identity)}</div>`
+          : "";
+
+        return `
+        <${tagName}
+          class="timeline-item ${isJumpable ? "is-jumpable" : ""}"
+          ${isJumpable ? `data-seek="${escapeHtml(String(event.seek_seconds))}"` : ""}
+          ${isJumpable ? 'type="button"' : ""}
+        >
           <div class="timeline-time">${escapeHtml(event.timestamp_in_seconds || "00:00")}</div>
           <div class="timeline-kind">${escapeHtml(formatKind(event.kind))}</div>
           <div class="timeline-body">
             <strong>${escapeHtml(event.label)}</strong>
+            ${actionIdentity}
             <p>${escapeHtml(event.detail)}</p>
           </div>
-        </article>
-      `
+        </${tagName}>
+      `;
+      }
     )
     .join("");
+
+  for (const item of elements.timelineList.querySelectorAll("[data-seek]")) {
+    item.addEventListener("click", () => {
+      jumpVideoToTimestamp(Number(item.dataset.seek));
+    });
+  }
 }
 
 function renderFileGroups(recording) {
@@ -440,6 +466,45 @@ function formatKind(kind) {
   }
   return kind.charAt(0).toUpperCase() + kind.slice(1);
 }
+
+function jumpVideoToTimestamp(seekSeconds) {
+  const video = elements.recordingVideo;
+  const baseSrc = (video.dataset.baseSrc || video.currentSrc || video.src || "").split("#")[0];
+  if (!Number.isFinite(seekSeconds) || !baseSrc) {
+    return;
+  }
+
+  state.pendingSeekSeconds = seekSeconds;
+  state.pendingAutoplayAfterSeek = true;
+  video.pause();
+  video.src = `${baseSrc}#t=${Math.max(0, seekSeconds).toFixed(3)}`;
+  video.load();
+}
+
+elements.recordingVideo.addEventListener("loadedmetadata", () => {
+  if (!Number.isFinite(state.pendingSeekSeconds)) {
+    return;
+  }
+
+  const pendingSeekSeconds = state.pendingSeekSeconds;
+  const video = elements.recordingVideo;
+  const duration = Number.isFinite(video.duration) ? video.duration : null;
+  const clampedSeek = duration ? Math.min(pendingSeekSeconds, Math.max(duration - 0.05, 0)) : pendingSeekSeconds;
+
+  if (Math.abs(video.currentTime - clampedSeek) > 0.25) {
+    video.currentTime = Math.max(0, clampedSeek);
+  }
+});
+
+elements.recordingVideo.addEventListener("canplay", () => {
+  if (!state.pendingAutoplayAfterSeek) {
+    return;
+  }
+
+  state.pendingAutoplayAfterSeek = false;
+  state.pendingSeekSeconds = null;
+  elements.recordingVideo.play().catch(() => {});
+});
 
 function escapeHtml(value) {
   return String(value)
