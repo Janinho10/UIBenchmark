@@ -46,12 +46,15 @@ const TIMELINE_KINDS = [
   { id: "system_action", label: "System actions" },
   { id: "artifact", label: "Artifacts" },
 ];
+const ASSET_VERSION = window.EXPLORER_ASSET_VERSION || "dev";
 
 loadExplorer();
 
 async function loadExplorer() {
   try {
-    const response = await fetch("./data/explorer-data.json");
+    const response = await fetch(`./data/explorer-data.json?v=${encodeURIComponent(ASSET_VERSION)}`, {
+      cache: "no-store",
+    });
     if (!response.ok) {
       throw new Error(`Failed to load explorer data: ${response.status}`);
     }
@@ -318,10 +321,10 @@ function renderVideo(recording) {
 
 function renderPrimaryFileLinks(recording) {
   const primary = [
-    ["Open video", recording.files.video?.path, true],
-    ["APK", recording.files.apk?.path, false],
-    ["Context script", recording.files.context?.path, false],
-    ["Replay script", recording.files.script?.path, false],
+    ["Video on GitHub", recording.files.video?.github_path || recording.files.video?.path, true],
+    ["APK", recording.files.apk?.github_path || recording.files.apk?.path, false],
+    ["Context script", recording.files.context?.github_path || recording.files.context?.path, false],
+    ["Replay script", recording.files.script?.github_path || recording.files.script?.path, false],
   ];
 
   elements.primaryFileLinks.innerHTML = primary
@@ -357,7 +360,7 @@ function renderMetadata(recording) {
       ([term, description]) => `
         <div>
           <dt>${escapeHtml(term)}</dt>
-          <dd>${escapeHtml(description || "Unknown")}</dd>
+          <dd>${renderMetadataValue(description)}</dd>
         </div>
       `
     )
@@ -442,12 +445,14 @@ function renderFileGroups(recording) {
                 (item) =>
                   item.type === "directory"
                     ? `
-                      <span class="file-link file-link-static">
+                      <a class="file-link file-link-static" href="${escapeHtml(
+                        item.github_path || item.path
+                      )}" target="_blank" rel="noreferrer">
                         ${escapeHtml(item.label)} (directory)
-                      </span>
+                      </a>
                     `
                     : `
-                      <a class="file-link" href="${escapeHtml(item.path)}" target="_blank" rel="noreferrer">
+                      <a class="file-link" href="${escapeHtml(item.github_path || item.path)}" target="_blank" rel="noreferrer">
                         ${escapeHtml(item.label)}
                       </a>
                     `
@@ -513,4 +518,14 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function renderMetadataValue(value) {
+  if (value && typeof value === "object" && value.path && value.label) {
+    return `<a class="meta-link" href="${escapeHtml(value.path)}" target="_blank" rel="noreferrer">${escapeHtml(
+      value.label
+    )}</a>`;
+  }
+
+  return escapeHtml(value || "Unknown");
 }

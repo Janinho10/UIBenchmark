@@ -1,5 +1,6 @@
 import ast
 import json
+import os
 import re
 import sqlite3
 from collections import Counter, defaultdict
@@ -13,15 +14,34 @@ DB_PATH = ASSETS_ROOT / "database_working_copy.db"
 BENCHMARK_ROOT = ASSETS_ROOT / "Benchmark"
 OUTPUT_PATH = ROOT / "data" / "explorer-data.json"
 MANUAL_ACTION_IDENTITIES_PATH = ROOT / "data" / "manual-action-identities.json"
+BENCHMARK_PUBLIC_BASE_URL = os.environ.get(
+    "BENCHMARK_PUBLIC_BASE_URL",
+    "https://pub-9c59b549722b4472aaaeb0656691069f.r2.dev",
+).rstrip("/")
+GITHUB_REPO_BASE_URL = os.environ.get(
+    "GITHUB_REPO_BASE_URL",
+    "https://github.com/Janinho10/UIBenchmark",
+).rstrip("/")
+GITHUB_REPO_BRANCH = os.environ.get("GITHUB_REPO_BRANCH", "main")
 GENERIC_MESSAGES = {"success", "successful replay", "found download apk"}
 SELECTOR_PRIORITY_KEYS = ("text", "textContains", "description", "descriptionContains")
 SELECTOR_FALLBACK_KEYS = ("resourceId", "focused", "className")
 SEARCH_WINDOW = 8
 
 
-def relative_url(path: Path) -> str:
-    parts = [quote(part) for part in path.relative_to(ROOT.parent).parts]
-    return "../" + "/".join(parts)
+def benchmark_public_url(path: Path) -> str:
+    parts = [quote(part) for part in path.relative_to(ASSETS_ROOT).parts]
+    return f"{BENCHMARK_PUBLIC_BASE_URL}/" + "/".join(parts)
+
+
+def github_repo_url(path: Path) -> str:
+    relative_parts = [quote(part) for part in path.relative_to(ROOT.parent).parts]
+    object_kind = "tree" if path.is_dir() else "blob"
+    return f"{GITHUB_REPO_BASE_URL}/{object_kind}/{GITHUB_REPO_BRANCH}/" + "/".join(relative_parts)
+
+
+def benchmark_label(path: Path) -> str:
+    return path.relative_to(ROOT.parent).as_posix()
 
 
 def load_manual_action_identities() -> dict[str, list[dict]]:
@@ -70,7 +90,15 @@ def load_sample_dirs() -> dict[str, Path]:
 
 def describe_files(sample_dir: Path | None) -> dict:
     files = {
-        "sample_dir": relative_url(sample_dir) if sample_dir else None,
+        "sample_dir": (
+            {
+                "label": benchmark_label(sample_dir),
+                "path": github_repo_url(sample_dir),
+                "type": "directory",
+            }
+            if sample_dir
+            else None
+        ),
         "video": None,
         "apk": None,
         "context": None,
@@ -87,7 +115,8 @@ def describe_files(sample_dir: Path | None) -> dict:
 
         item = {
             "label": entry.name,
-            "path": relative_url(entry),
+            "path": benchmark_public_url(entry),
+            "github_path": github_repo_url(entry),
             "type": "directory" if entry.is_dir() else "file",
         }
 

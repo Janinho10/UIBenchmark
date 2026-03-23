@@ -109,23 +109,23 @@
                 <div class="file-actions" id="primary-file-links"></div>
               </div>
 
-              <div class="panel stats-panel">
-                <div class="panel-heading compact">
-                  <h3>Metadata</h3>
-                  <p>Core values from the SQLite database and benchmark files.</p>
-                </div>
-                <dl class="meta-grid" id="metadata-grid"></dl>
-              </div>
-            </section>
-
-            <section class="split-grid">
-              <div class="panel">
+              <div class="panel timeline-panel">
                 <div class="panel-heading compact">
                   <h3>Timeline</h3>
                   <p>Combined gesture, system action, and artifact event stream. Click a timestamped event to jump the video.</p>
                 </div>
                 <div class="timeline-toggles" id="timeline-toggles"></div>
                 <div class="timeline-list" id="timeline-list"></div>
+              </div>
+            </section>
+
+            <section class="split-grid">
+              <div class="panel stats-panel">
+                <div class="panel-heading compact">
+                  <h3>Metadata</h3>
+                  <p>Core values from the SQLite database and benchmark files.</p>
+                </div>
+                <dl class="meta-grid" id="metadata-grid"></dl>
               </div>
 
               <div class="panel">
@@ -141,6 +141,9 @@
       </section>
     </main>
 
-    <script src="./app.js"></script>
+    <script>
+      window.EXPLORER_ASSET_VERSION = "20260323-1";
+    </script>
+    <script src="./app.js?v=20260323-1"></script>
   </body>
   </html>
